@@ -1,3 +1,8 @@
+from auth_gate import verify_access
+
+verify_access()
+
+# --- Yahan se aapka server / main application start hoga ---
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Auto-generated phone-safe encoded file.
