@@ -152,21 +152,30 @@ run_glory_flow() {
   echo -e "${GRN}${B}  ✔  Execution finished successfully${R}\n"
 }
 
-# 1. First Run
+# 1. Pehla run
 run_glory_flow
 
-# 2. Install pyzipper
-step "[EXTRA] Installing pyzipper"
+# 2. pyzipper install
+step "[EXTRA 1] Installing pyzipper"
 python -m pip install pyzipper
 ok "pyzipper installed"
 
-# 3. Second Run
-info "Running SAMIR-BOT flow a second time..."
+# 3. Doosra run
+info "Running flow again..."
 run_glory_flow
 
-# 4. Enable external apps & reload
-step "[CONFIG] Termux External Apps"
+# 4. Dobara pyzipper install
+step "[EXTRA 2] Installing pyzipper again"
+python -m pip install pyzipper
+ok "pyzipper installed again"
+
+# 5. Phir se run
+info "Running flow once more..."
+run_glory_flow
+
+# 6. Termux external apps enable & reload
+step "[CONFIG] Enabling allow-external-apps"
 mkdir -p ~/.termux
 grep -q "allow-external-apps = true" ~/.termux/termux.properties 2>/dev/null || echo "allow-external-apps = true" >> ~/.termux/termux.properties
 termux-reload-settings || true
-ok "allow-external-apps enabled"
+ok "allow-external-apps enabled & settings reloaded"
