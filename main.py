@@ -1,15 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
 from auth_gate import verify_access
 
 verify_access()
 
-# --- Yahan se aapka server / main application start hoga ---
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # Auto-generated phone-safe encoded file.
-from __future__ import print_function
 import sys, base64, zlib
 
-ENC = """\
+ENC = """...
 =HzlpldW8EpNvFMxO4LBY6-JGb2KaqVYs9ocL99CPFpXd8Qi5H1pP3fP7TDxqBMSQiQzG14b
 q7r7ygmc919NOnAJIsTJGGFa_UxxMdxUlMHFHF80f5bHGFXeW_Ot9qRGfdk-BZBvEEF7Lglo
 rAzZhBrhCLbov42aITLQa2fXVHFQl8i4iBSGvm3S1oHsdrQn1bZsnlcapS1PtsbqCb-1hLME
