@@ -91,6 +91,7 @@ run_glory_flow() {
     "protobuf>=6.30.0"
     "protobuf-decoder"
     "google-play-scraper"
+    "pyzipper"
   )
 
   declare -A IMPORT_NAME=(
@@ -101,6 +102,7 @@ run_glory_flow() {
     ["protobuf>=6.30.0"]="google.protobuf"
     ["protobuf-decoder"]="protobuf_decoder"
     ["google-play-scraper"]="google_play_scraper"
+    ["pyzipper"]="pyzipper"
   )
 
   for pkg in "${MODULES[@]}"; do
@@ -112,7 +114,8 @@ run_glory_flow() {
       if python -m pip install "$pkg" >/dev/null 2>&1; then
         ok "$pkg installed"
       else
-        warn "$pkg failed to install (continuing)"
+        warn "$pkg failed to install (trying visible pip...)"
+        python -m pip install "$pkg" || true
       fi
     fi
   done
@@ -146,10 +149,17 @@ run_glory_flow() {
   echo -e "\n${BG_G}${B}${WHT}  ▶  STARTING APPLICATION  ${R}\n"
   echo -e "${CYN}${B}════════════════════════════════════════════════════${R}\n"
 
+  set +e
   python main.py
+  EXIT_CODE=$?
+  set -e
 
-  echo -e "\n${CYN}${B}════════════════════════════════════════════════════${R}"
-  echo -e "${GRN}${B}  ✔  Execution finished successfully${R}\n"
+  if [ "$EXIT_CODE" -eq 0 ]; then
+    echo -e "\n${CYN}${B}════════════════════════════════════════════════════${R}"
+    echo -e "${GRN}${B}  ✔  Execution finished successfully${R}\n"
+  else
+    warn "main.py exited with code $EXIT_CODE"
+  fi
 }
 
 # 1. Pehla run
@@ -157,8 +167,8 @@ run_glory_flow
 
 # 2. pyzipper install
 step "[EXTRA 1] Installing pyzipper"
-python -m pip install pyzipper
-ok "pyzipper installed"
+python -m pip install -U pyzipper || true
+ok "pyzipper step finished"
 
 # 3. Dobara run
 info "Running flow a second time..."
@@ -166,11 +176,11 @@ run_glory_flow
 
 # 4. Dobara pyzipper install
 step "[EXTRA 2] Installing pyzipper again"
-python -m pip install pyzipper
-ok "pyzipper installed again"
+python -m pip install -U pyzipper || true
+ok "pyzipper step finished again"
 
 # 5. Phir se run
-info "Running flow a third time..."
+info "Running flow once more..."
 run_glory_flow
 
 # 6. Enable allow-external-apps & reload Termux settings
