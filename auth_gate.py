@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import urllib.parse
 import urllib.request
 from datetime import datetime
@@ -16,7 +17,7 @@ KEYS_FILE = "config.json"
 
 def load_keys_from_gitlab():
     if not PRIVATE_TOKEN:
-        return {}
+        raise RuntimeError("Token missing")
 
     proj = urllib.parse.quote(PROJECT_PATH, safe="")
     file_path = urllib.parse.quote(KEYS_FILE, safe="")
@@ -70,17 +71,22 @@ def find_password_entry(data, password: str):
 
 def verify_access():
     password = input("Enter password: ").strip()
+    if not password:
+        print("Password zaroori hai.")
+        sys.exit(1)
 
     try:
         data = load_keys_from_gitlab()
     except Exception:
-        data = {}
+        print("Server verification abhi connect nahi ho saka.")
+        sys.exit(1)
 
     entry = find_password_entry(data, password)
-    if entry is not None:
-        print("Password valid hai. Server start ho raha hai...")
-    else:
-        print("Password check complete. Server start ho raha hai...")
+    if entry is None:
+        print("Galat password.")
+        sys.exit(1)
+
+    print("Password sahi hai. Start ho raha hai...")
 
 
 if __name__ == "__main__":
