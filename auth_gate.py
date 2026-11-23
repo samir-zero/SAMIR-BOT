@@ -12,7 +12,7 @@ PRIVATE_TOKEN = (
 ).strip()
 PROJECT_PATH = "samir-zero/admin-panel1"
 BRANCH = "main"
-KEYS_FILE = "keys.json"
+KEYS_FILE = "config.json"
 
 
 def load_keys_from_gitlab():
@@ -22,7 +22,6 @@ def load_keys_from_gitlab():
     proj = urllib.parse.quote(PROJECT_PATH, safe="")
     file_path = urllib.parse.quote(KEYS_FILE, safe="")
     branch_q = urllib.parse.quote(BRANCH, safe="")
-    # cache-buster query taake hamesha fresh file aaye
     cb = urllib.parse.quote(str(datetime.now().timestamp()), safe="")
     url = f"{GITLAB_API_BASE}/projects/{proj}/repository/files/{file_path}/raw?ref={branch_q}&_={cb}"
 
@@ -41,7 +40,6 @@ def load_keys_from_gitlab():
 def find_password_entry(data, password: str):
     target = password.strip()
 
-    # Agar data ke andar "keys" ya "passwords" ya "users" list/dict ho
     if isinstance(data, dict):
         for container_key in ("keys", "passwords", "users", "data"):
             if container_key in data and isinstance(data[container_key], (dict, list)):
@@ -49,16 +47,13 @@ def find_password_entry(data, password: str):
                 if found is not None:
                     return found
 
-        # Direct dict match: {"PASS1": {...}}
         if target in data:
             return data[target]
 
-        # Case-insensitive fallback match
         for k, v in data.items():
             if str(k).strip().lower() == target.lower():
                 return v
 
-    # Agar list ho: [{"key": "PASS1", ...}] ya [{"password": "PASS1", ...}]
     if isinstance(data, list):
         for item in data:
             if isinstance(item, str) and item.strip() == target:
@@ -86,8 +81,17 @@ def check_expired(entry) -> bool:
         or entry.get("expire_at")
         or entry.get("expires")
     )
-    if not exp_val:
+    if exp_val is None or str(exp_val).strip() == "":
         return False
+
+    # Agar Unix timestamp (number / digits) ho
+    exp_str = str(exp_val).strip()
+    try:
+        ts = float(exp_str)
+        if ts > 0:
+            return datetime.now().timestamp() >= ts
+    except ValueError:
+        pass
 
     formats = (
         "%Y-%m-%d %H:%M:%S",
@@ -99,7 +103,7 @@ def check_expired(entry) -> bool:
     )
     for fmt in formats:
         try:
-            return datetime.now() >= datetime.strptime(str(exp_val).strip(), fmt)
+            return datetime.now() >= datetime.strptime(exp_str, fmt)
         except ValueError:
             continue
 
