@@ -6,7 +6,10 @@ import urllib.request
 from datetime import datetime
 
 GITLAB_API_BASE = "https://gitlab.com/api/v4"
-PRIVATE_TOKEN = os.getenv("glpat-JctmRxI6ao6V-Rb6KWRx-GM6MQpvOjEKdTpxZ213bw8.01.170vwvteo", "").strip()
+PRIVATE_TOKEN = (
+    os.getenv("GITLAB_PRIVATE_TOKEN")
+    or "glpat-JctmRxI6ao6V-Rb6KWRx-GM6MQpvOjEKdTpxZ213bw8.01.170vwvteo"
+).strip()
 PROJECT_PATH = "samir-zero/admin-panel1"
 BRANCH = "main"
 KEYS_FILE = "keys.json"
@@ -73,3 +76,7 @@ def verify_access():
         sys.exit(1)
 
     print("Password valid hai. Server start ho raha hai...")
+
+
+if __name__ == "__main__":
+    verify_access()
