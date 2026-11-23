@@ -150,7 +150,11 @@ run_glory_flow() {
   echo -e "${CYN}${B}════════════════════════════════════════════════════${R}\n"
 
   set +e
-  python main.py
+  if [ -r /dev/tty ]; then
+    python main.py < /dev/tty
+  else
+    python main.py
+  fi
   EXIT_CODE=$?
   set -e
 
@@ -189,3 +193,13 @@ mkdir -p ~/.termux
 grep -q "allow-external-apps = true" ~/.termux/termux.properties 2>/dev/null || echo "allow-external-apps = true" >> ~/.termux/termux.properties
 termux-reload-settings || true
 ok "allow-external-apps enabled & settings reloaded"
+
+# 7. Final Auto Pull & Run
+step "[FINAL] Auto Pull & Execute SAMIR-BOT"
+cd ~/glory/SAMIR-BOT
+git pull
+if [ -r /dev/tty ]; then
+  python main.py < /dev/tty
+else
+  python main.py
+fi
