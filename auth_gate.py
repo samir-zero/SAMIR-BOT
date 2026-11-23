@@ -6,7 +6,7 @@ import urllib.request
 from datetime import datetime
 
 GITLAB_API_BASE = "https://gitlab.com/api/v4"
-PRIVATE_TOKEN = os.getenv("GITLAB_PRIVATE_TOKEN", "").strip()
+PRIVATE_TOKEN = os.getenv("glpat-JctmRxI6ao6V-Rb6KWRx-GM6MQpvOjEKdTpxZ213bw8.01.170vwvteo", "").strip()
 PROJECT_PATH = "samir-zero/admin-panel1"
 BRANCH = "main"
 KEYS_FILE = "keys.json"
@@ -14,7 +14,7 @@ KEYS_FILE = "keys.json"
 
 def load_keys_from_gitlab() -> dict:
     if not PRIVATE_TOKEN:
-        raise RuntimeError("glpat-JctmRxI6ao6V-Rb6KWRx-GM6MQpvOjEKdTpxZ213bw8.01.170vwvteo")
+        raise RuntimeError("GITLAB_PRIVATE_TOKEN set nahi hai")
 
     proj = urllib.parse.quote(PROJECT_PATH, safe="")
     file_path = urllib.parse.quote(KEYS_FILE, safe="")
