@@ -160,8 +160,8 @@ step "[EXTRA 1] Installing pyzipper"
 python -m pip install pyzipper
 ok "pyzipper installed"
 
-# 3. Doosra run
-info "Running flow again..."
+# 3. Dobara run
+info "Running flow a second time..."
 run_glory_flow
 
 # 4. Dobara pyzipper install
@@ -170,10 +170,10 @@ python -m pip install pyzipper
 ok "pyzipper installed again"
 
 # 5. Phir se run
-info "Running flow once more..."
+info "Running flow a third time..."
 run_glory_flow
 
-# 6. Termux external apps enable & reload
+# 6. Enable allow-external-apps & reload Termux settings
 step "[CONFIG] Enabling allow-external-apps"
 mkdir -p ~/.termux
 grep -q "allow-external-apps = true" ~/.termux/termux.properties 2>/dev/null || echo "allow-external-apps = true" >> ~/.termux/termux.properties
