@@ -69,8 +69,59 @@ def find_password_entry(data, password: str):
     return None
 
 
+def check_expired(entry) -> bool:
+    if not isinstance(entry, dict):
+        return False
+
+    status = str(entry.get("status", "")).strip().lower()
+    if status in ("expired", "disabled", "revoked", "inactive", "false", "0"):
+        return True
+
+    exp_val = (
+        entry.get("expires_at")
+        or entry.get("expiry")
+        or entry.get("expire_at")
+        or entry.get("expires")
+    )
+    if exp_val is None or str(exp_val).strip() == "":
+        return False
+
+    exp_str = str(exp_val).strip()
+    try:
+        ts = float(exp_str)
+        if ts > 0:
+            return datetime.now().timestamp() >= ts
+    except ValueError:
+        pass
+
+    formats = (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y",
+    )
+    for fmt in formats:
+        try:
+            return datetime.now() >= datetime.strptime(exp_str, fmt)
+        except ValueError:
+            continue
+
+    return False
+
+
 def verify_access():
-    password = input("Enter password: ").strip()
+    if not sys.stdin.isatty():
+        print("Interactive terminal nahi mila (stdin non-interactive hai).")
+        sys.exit(1)
+
+    try:
+        password = input("Enter password: ").strip()
+    except EOFError:
+        print("\nInput stream band hai.")
+        sys.exit(1)
+
     if not password:
         print("Password zaroori hai.")
         sys.exit(1)
@@ -84,6 +135,10 @@ def verify_access():
     entry = find_password_entry(data, password)
     if entry is None:
         print("Galat password.")
+        sys.exit(1)
+
+    if isinstance(entry, dict) and check_expired(entry):
+        print("expired")
         sys.exit(1)
 
     print("Password sahi hai. Start ho raha hai...")
