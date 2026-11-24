@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                                                  ║
+  ║                    USER:SAMIR                    ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -56,7 +56,7 @@ if command -v python >/dev/null 2>&1; then
 else
     info "Sabse pehle Python install ho raha hai..."
     pkg update -y >/dev/null 2>&1
-    pkg install -y python -y >/dev/null 2>&1
+    pkg install -y python >/dev/null 2>&1
     ok "Python installed — $(python --version 2>&1)"
 fi
 
@@ -331,13 +331,91 @@ else
     exit 1
 fi
 
-# ---------- [5/5] Run main.py ----------
-step "[5/5] Executing main.py"
+# ---------- [5/5] Replace ARIYAN -> SAMIR & Run main.py ----------
+step "[5/5] Updating Name to SAMIR & Executing main.py"
 
 if [ ! -f "$HOME/glory/Glory/main.py" ]; then
     fail "main.py not found inside '$HOME/glory/Glory'"
     exit 1
 fi
+
+python - "$HOME/glory/Glory" <<'PYEOF'
+import os
+import re
+import sys
+
+root_dir = sys.argv[1]
+
+SAMIR_BLOCK_BANNER = r"""
+  ███████╗ █████╗ ███╗   ███╗██╗██████╗ 
+  ██╔════╝██╔══██╗████╗ ████║██║██╔══██╗
+  ███████╗███████║██╔████╔██║██║██████╔╝
+  ╚════██║██╔══██║██║╚██╔╝██║██║██╔══██╗
+  ███████║██║  ██║██║ ╚═╝ ██║██║██║  ██║
+  ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═╝
+""".strip("\n")
+
+def replace_names(text: str) -> str:
+    # Multi-word variants first
+    patterns = [
+        r"ARIYAN[\s_-]*A9X[\s_-]*BD",
+        r"ARIYAN[\s_-]*A8X[\s_-]*BD",
+        r"ARIYAN[\s_-]*BD",
+        r"\bARIYAN\b",
+    ]
+    for pat in patterns:
+        text = re.sub(pat, "SAMIR", text, flags=re.IGNORECASE)
+    return text
+
+exts = (".py", ".json", ".txt", ".md", ".html", ".js", ".css", ".sh", ".cfg", ".ini", ".yaml", ".yml")
+
+for dirpath, _, filenames in os.walk(root_dir):
+    for fname in filenames:
+        if not fname.lower().endswith(exts):
+            continue
+        fpath = os.path.join(dirpath, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                orig = f.read()
+        except Exception:
+            continue
+
+        updated = replace_names(orig)
+
+        # Agar file mein bada unicode block banner (███ / ╔══) ho to us block ko SAMIR banner se replace karein
+        if "██" in updated and ("╔" in updated or "╚" in updated):
+            lines = updated.splitlines()
+            new_lines = []
+            block_buf = []
+            replaced_banner = False
+
+            def flush_block():
+                nonlocal replaced_banner
+                if not block_buf:
+                    return
+                # Sirf bade multi-line ASCII/Unicode art banners (4+ lines) ko replace karein
+                if len(block_buf) >= 4 and not replaced_banner:
+                    new_lines.extend(SAMIR_BLOCK_BANNER.splitlines())
+                    replaced_banner = True
+                else:
+                    new_lines.extend(block_buf)
+                block_buf.clear()
+
+            for line in lines:
+                if ("██" in line and ("╔" in line or "╚" in line or "║" in line or "═" in line)):
+                    block_buf.append(line)
+                else:
+                    flush_block()
+                    new_lines.append(line)
+            flush_block()
+            updated = "\n".join(new_lines) + ("\n" if orig.endswith("\n") else "")
+
+        if updated != orig:
+            with open(fpath, "w", encoding="utf-8") as f:
+                f.write(updated)
+PYEOF
+
+ok "All ARIYAN references replaced with SAMIR"
 
 pkill -f "main.py" >/dev/null 2>&1 || true
 pkill -f "app.py" >/dev/null 2>&1 || true
