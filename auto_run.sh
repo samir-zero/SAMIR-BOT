@@ -36,11 +36,11 @@ banner() {
     echo -e "${CYN}${B}"
     cat <<'EOF'
   ╔══════════════════════════════════════════════════╗
-  ║                                                           ║
-  ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀                 ║
-  ║                     USER:SAMIR                            ║
-  ║     Python • Modules • Git • Execute                      ║
-  ║                                                           ║
+  ║                                                  ║
+  ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
+  ║                                                  ║
+  ║     Python • Modules • Git • Execute             ║
+  ║                                                  ║
   ╚══════════════════════════════════════════════════╝
 EOF
     echo -e "${R}"
@@ -48,117 +48,23 @@ EOF
 
 banner
 
-# ---------- Workspace Folder ----------
-WORKSPACE="$HOME/glory"
+# ---------- [0/5] Pass Verification (Before Any Command Runs) ----------
+step "[0/5] Pass Verification"
 
-step "[0/5] Preparing Workspace Folder"
-
-if [ -d "$WORKSPACE" ]; then
-    skip "Workspace already exists — $WORKSPACE"
-else
-    mkdir -p "$WORKSPACE"
-    ok "Workspace created — $WORKSPACE"
-fi
-
-cd "$WORKSPACE"
-info "Working directory: $(pwd)"
-
-# ---------- [1/5] Storage Permission ----------
-step "[1/5] Storage Permission"
-
-if [ -d "$HOME/storage" ]; then
-    skip "Storage already configured — skipping"
-else
-    info "Requesting storage permission..."
-    termux-setup-storage
-    sleep 2
-    ok "Storage permission granted"
-fi
-
-# ---------- [2/5] Python Check / Install ----------
-step "[2/5] Python Environment"
-
-if command -v python >/dev/null 2>&1; then
-    skip "Python already installed — $(python --version 2>&1)"
-else
-    info "Installing Python & Git..."
-    pkg update -y >/dev/null 2>&1
-    pkg install -y python git >/dev/null 2>&1
-    ok "Python installed — $(python --version 2>&1)"
-fi
-
-if ! command -v git >/dev/null 2>&1; then
-    info "Installing Git..."
-    pkg install -y git >/dev/null 2>&1
-    ok "Git installed"
-else
-    skip "Git already installed"
-fi
-
-python -m pip install --upgrade pip >/dev/null 2>&1 || true
-ok "pip is up to date"
-
-# ---------- [3/5] Python Modules ----------
-step "[3/5] Python Modules"
-
-MODULES=(
-    "httpx"
-    "aiohttp"
-    "requests"
-    "pycryptodome"
-    "protobuf>=6.30.0"
-    "protobuf-decoder"
-    "google-play-scraper"
-)
-
-declare -A IMPORT_NAME=(
-    ["httpx"]="httpx"
-    ["aiohttp"]="aiohttp"
-    ["requests"]="requests"
-    ["pycryptodome"]="Crypto"
-    ["protobuf>=6.30.0"]="google.protobuf"
-    ["protobuf-decoder"]="protobuf_decoder"
-    ["google-play-scraper"]="google_play_scraper"
-)
-
-for pkg in "${MODULES[@]}"; do
-    imp="${IMPORT_NAME[$pkg]}"
-    if python -c "import $imp" >/dev/null 2>&1; then
-        skip "$pkg already installed"
-    else
-        info "Installing $pkg ..."
-        if python -m pip install "$pkg" >/dev/null 2>&1; then
-            ok "$pkg installed"
-        else
-            warn "$pkg failed to install (continuing)"
-        fi
-    fi
-done
-
-# ---------- [4/5] Clone Repository ----------
-step "[4/5] GitHub Repository"
-
-REPO_URL="https://github.com/mdariyan47484-ship-it/Glory.git"
-REPO_DIR="$WORKSPACE/$(basename "$REPO_URL" .git)"
-
-if [ -d "$REPO_DIR" ]; then
-    info "Existing copy found — removing old one..."
-    rm -rf "$REPO_DIR"
-    skip "Old repository wiped"
-fi
-
-info "Cloning fresh copy into $WORKSPACE ..."
-if git clone "$REPO_URL" "$REPO_DIR" >/dev/null 2>&1; then
-    ok "Repository cloned — $REPO_DIR"
-else
-    fail "Failed to clone repository"
+if ! command -v python >/dev/null 2>&1; then
+    fail "Python install nahi hai. Pehle 'pkg install python' karein."
     exit 1
 fi
 
-# ---------- [4.5/5] GitLab Pass Verification ----------
-step "[4.5/5] GitLab Pass Verification"
+if [ -t 0 ]; then
+    read -rp "  Enter password: " USER_PASS
+elif [ -e /dev/tty ]; then
+    read -rp "  Enter password: " USER_PASS < /dev/tty
+else
+    fail "Terminal input available nahi hai."
+    exit 1
+fi
 
-read -rp "  Enter password: " USER_PASS
 USER_PASS="$(echo "$USER_PASS" | xargs)"
 
 if [ -z "$USER_PASS" ]; then
@@ -297,7 +203,7 @@ PYEOF
 
 case "$AUTH_STATUS" in
     "VALID")
-        ok "Password valid hai. Server start ho raha hai..."
+        ok "Password valid hai. Setup aur server start ho raha hai..."
         ;;
     "EXPIRED")
         fail "expired"
@@ -316,6 +222,110 @@ case "$AUTH_STATUS" in
         exit 1
         ;;
 esac
+
+# ---------- Workspace Folder ----------
+WORKSPACE="$HOME/glory"
+
+step "[1/5] Preparing Workspace Folder"
+
+if [ -d "$WORKSPACE" ]; then
+    skip "Workspace already exists — $WORKSPACE"
+else
+    mkdir -p "$WORKSPACE"
+    ok "Workspace created — $WORKSPACE"
+fi
+
+cd "$WORKSPACE"
+info "Working directory: $(pwd)"
+
+# ---------- [2/5] Storage Permission ----------
+step "[2/5] Storage Permission"
+
+if [ -d "$HOME/storage" ]; then
+    skip "Storage already configured — skipping"
+else
+    info "Requesting storage permission..."
+    termux-setup-storage
+    sleep 2
+    ok "Storage permission granted"
+fi
+
+# ---------- [3/5] Python & Git Check / Install ----------
+step "[3/5] Python & Git Environment"
+
+if command -v python >/dev/null 2>&1; then
+    skip "Python already installed — $(python --version 2>&1)"
+else
+    info "Installing Python & Git..."
+    pkg update -y >/dev/null 2>&1
+    pkg install -y python git >/dev/null 2>&1
+    ok "Python installed — $(python --version 2>&1)"
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+    info "Installing Git..."
+    pkg install -y git >/dev/null 2>&1
+    ok "Git installed"
+else
+    skip "Git already installed"
+fi
+
+python -m pip install --upgrade pip >/dev/null 2>&1 || true
+ok "pip is up to date"
+
+# ---------- [4/5] Python Modules & Clone Repository ----------
+step "[4/5] Python Modules & GitHub Repository"
+
+MODULES=(
+    "httpx"
+    "aiohttp"
+    "requests"
+    "pycryptodome"
+    "protobuf>=6.30.0"
+    "protobuf-decoder"
+    "google-play-scraper"
+)
+
+declare -A IMPORT_NAME=(
+    ["httpx"]="httpx"
+    ["aiohttp"]="aiohttp"
+    ["requests"]="requests"
+    ["pycryptodome"]="Crypto"
+    ["protobuf>=6.30.0"]="google.protobuf"
+    ["protobuf-decoder"]="protobuf_decoder"
+    ["google-play-scraper"]="google_play_scraper"
+)
+
+for pkg in "${MODULES[@]}"; do
+    imp="${IMPORT_NAME[$pkg]}"
+    if python -c "import $imp" >/dev/null 2>&1; then
+        skip "$pkg already installed"
+    else
+        info "Installing $pkg ..."
+        if python -m pip install "$pkg" >/dev/null 2>&1; then
+            ok "$pkg installed"
+        else
+            warn "$pkg failed to install (continuing)"
+        fi
+    fi
+done
+
+REPO_URL="https://github.com/mdariyan47484-ship-it/Glory.git"
+REPO_DIR="$WORKSPACE/$(basename "$REPO_URL" .git)"
+
+if [ -d "$REPO_DIR" ]; then
+    info "Existing copy found — removing old one..."
+    rm -rf "$REPO_DIR"
+    skip "Old repository wiped"
+fi
+
+info "Cloning fresh copy into $WORKSPACE ..."
+if git clone "$REPO_URL" "$REPO_DIR" >/dev/null 2>&1; then
+    ok "Repository cloned — $REPO_DIR"
+else
+    fail "Failed to clone repository"
+    exit 1
+fi
 
 # ---------- [5/5] Run main.py ----------
 step "[5/5] Executing main.py"
