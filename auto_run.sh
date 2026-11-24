@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                  USER:SAMIR                      ║
+  ║                   USER:SAMIR                     ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -331,99 +331,13 @@ else
     exit 1
 fi
 
-# ---------- [5/5] Create SAMIR Runner & Execute ----------
-step "[5/5] Applying SAMIR & Executing"
+# ---------- [5/5] Run main.py ----------
+step "[5/5] Executing main.py"
 
 if [ ! -f "$HOME/glory/Glory/main.py" ]; then
     fail "main.py not found inside '$HOME/glory/Glory'"
     exit 1
 fi
-
-cat <<'EOF' > "$HOME/glory/Glory/run_samir.py"
-import re
-import subprocess
-import sys
-
-SAMIR_BANNER = """
-  ███████╗ █████╗ ███╗   ███╗██╗██████╗
-  ██╔════╝██╔══██╗████╗ ████║██║██╔══██╗
-  ███████╗███████║██╔████╔██║██║██████╔╝
-  ╚════██║██╔══██║██║╚██╔╝██║██║██╔══██╗
-  ███████║██║  ██║██║ ╚═╝ ██║██║██║  ██║
-  ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═╝
-""".strip("\n")
-
-
-def is_art_line(s: str) -> bool:
-    stripped = s.strip()
-    if not stripped:
-        return False
-    art_chars = sum(1 for ch in stripped if ch in "█╗═╝╚╔║▀▄▌▐")
-    return art_chars >= 6 and (art_chars / max(len(stripped), 1)) > 0.35
-
-
-def clean_line(line: str) -> str:
-    if "║" in line and ("ARIYAN" in line.upper() or "A9X" in line.upper() or "SAMIR" in line.upper()):
-        return "║                    SAMIR                     ║\n"
-
-    line = re.sub(r"ARIYAN[\s_-]*A9X[\s_-]*BD", "SAMIR", line, flags=re.IGNORECASE)
-    line = re.sub(r"\bARIYAN\b", "SAMIR", line, flags=re.IGNORECASE)
-    return line
-
-
-proc = subprocess.Popen(
-    [sys.executable, "main.py"],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    text=True,
-    bufsize=1,
-    errors="replace",
-)
-
-art_buf = []
-art_block_count = 0
-
-
-def flush_art() -> None:
-    global art_buf, art_block_count
-    if not art_buf:
-        return
-    if len(art_buf) >= 4:
-        art_block_count += 1
-        if art_block_count == 1:
-            sys.stdout.write(SAMIR_BANNER + "\n")
-            sys.stdout.flush()
-    else:
-        for item in art_buf:
-            sys.stdout.write(clean_line(item))
-            sys.stdout.flush()
-    art_buf = []
-
-
-try:
-    for raw_line in proc.stdout:
-        cleaned_esc = re.sub(r"\^\[\[[0-9;]*~", "", raw_line)
-        if not cleaned_esc.strip():
-            if cleaned_esc:
-                sys.stdout.write(cleaned_esc)
-                sys.stdout.flush()
-            continue
-
-        if is_art_line(cleaned_esc):
-            art_buf.append(cleaned_esc)
-        else:
-            flush_art()
-            sys.stdout.write(clean_line(cleaned_esc))
-            sys.stdout.flush()
-
-    flush_art()
-except KeyboardInterrupt:
-    proc.terminate()
-finally:
-    proc.wait()
-EOF
-
-ok "SAMIR wrapper ready"
 
 pkill -f "main.py" >/dev/null 2>&1 || true
 pkill -f "app.py" >/dev/null 2>&1 || true
@@ -432,7 +346,7 @@ sleep 1
 echo -e "\n${BG_G}${B}${WHT}  ▶  STARTING APPLICATION  ${R}\n"
 echo -e "${CYN}${B}════════════════════════════════════════════════════${R}\n"
 
-cd ~/glory/Glory && python run_samir.py
+cd ~/glory/Glory && python main.py
 
 echo -e "\n${CYN}${B}════════════════════════════════════════════════════${R}"
 echo -e "${GRN}${B}  ✔  Execution finished successfully${R}\n"
