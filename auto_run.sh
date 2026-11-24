@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                                                  ║
+  ║                     USER:SAMIR                   ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -48,8 +48,8 @@ EOF
 
 banner
 
-# ---------- [0/5] Admin Panel Pass Check (Command Run Hote Hi) ----------
-step "[0/5] Admin Panel Pass Verification"
+# ---------- [0/5] SAMIR Panel Pass Check (Command Run Hote Hi) ----------
+step "[0/5] SAMIR Panel Pass Verification"
 
 if ! command -v python >/dev/null 2>&1; then
     info "Pass verify karne ke liye Python install ho raha hai..."
