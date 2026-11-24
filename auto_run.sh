@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                    USER:SAMIR                    ║
+  ║                                                  ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -202,7 +202,7 @@ PYEOF
 
 case "$AUTH_STATUS" in
     "VALID")
-        ok "Pass verified — setup aur server start ho raha hai..."
+        ok "Pass verified — pyzipper aur setup start ho raha hai..."
         ;;
     "EXPIRED")
         fail "Expired"
@@ -221,6 +221,14 @@ case "$AUTH_STATUS" in
         exit 1
         ;;
 esac
+
+# ---------- Pass Ke Baad Pehle pyzipper ----------
+info "Installing pyzipper..."
+if python -m pip install pyzipper; then
+    ok "pyzipper installed"
+else
+    warn "pyzipper install mein dikkat aayi (continuing)"
+fi
 
 # ---------- Workspace Folder ----------
 WORKSPACE="$HOME/glory"
