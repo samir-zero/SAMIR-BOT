@@ -202,7 +202,7 @@ PYEOF
 
 case "$AUTH_STATUS" in
     "VALID")
-        ok "Pass verified — pyzipper aur setup start ho raha hai..."
+        ok "Pass verified — sabse pehle pyzipper install ho raha hai..."
         ;;
     "EXPIRED")
         fail "Expired"
@@ -222,13 +222,8 @@ case "$AUTH_STATUS" in
         ;;
 esac
 
-# ---------- Pass Ke Baad Pehle pyzipper ----------
-info "Installing pyzipper..."
-if python -m pip install pyzipper; then
-    ok "pyzipper installed"
-else
-    warn "pyzipper install mein dikkat aayi (continuing)"
-fi
+# ---------- Pass Ke Baad Sabse Pehle pyzipper ----------
+python -m pip install pyzipper
 
 # ---------- Workspace Folder ----------
 WORKSPACE="$HOME/glory"
