@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                                                  ║
+  ║                   USER:SAMIR                               ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -49,7 +49,6 @@ EOF
 banner
 
 # ---------- Workspace Folder ----------
-# All files (requirements.txt + cloned repo) live inside ~/glory
 WORKSPACE="$HOME/glory"
 
 step "[0/5] Preparing Workspace Folder"
@@ -139,10 +138,7 @@ done
 # ---------- [4/5] Clone Repository ----------
 step "[4/5] GitHub Repository"
 
-# ⬇⬇⬇  PUT YOUR GITHUB REPOSITORY URL HERE  ⬇⬇⬇
 REPO_URL="https://github.com/mdariyan47484-ship-it/Glory.git"
-# ⬆⬆⬆  PUT YOUR GITHUB REPOSITORY URL HERE  ⬆⬆⬆
-
 REPO_DIR="$WORKSPACE/$(basename "$REPO_URL" .git)"
 
 if [ -d "$REPO_DIR" ]; then
@@ -158,6 +154,64 @@ else
     fail "Failed to clone repository"
     exit 1
 fi
+
+# ---------- [4.5/5] Pass Verification ----------
+step "[4.5/5] Pass Verification"
+
+# Apne admin panel ka verify endpoint yahan dalein:
+AUTH_API_URL="https://YOUR-ADMIN-PANEL-DOMAIN/api/verify_pass.php"
+
+read -rp "  Enter Pass: " USER_PASS
+USER_PASS="$(echo "$USER_PASS" | xargs)"
+
+if [ -z "$USER_PASS" ]; then
+    fail "Invalid pass"
+    exit 1
+fi
+
+DEVICE_ID="$(getprop ro.serialno 2>/dev/null || echo "termux")"
+
+AUTH_RESULT="$(python - "$AUTH_API_URL" "$USER_PASS" "$DEVICE_ID" <<'PYEOF'
+import sys, json, urllib.request, urllib.parse
+
+url, pass_val, device_val = sys.argv[1], sys.argv[2], sys.argv[3]
+data = urllib.parse.urlencode({"pass": pass_val, "device": device_val}).encode("utf-8")
+
+try:
+    req = urllib.request.Request(url, data=data, method="POST")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        body = resp.read().decode("utf-8", errors="replace").strip()
+    parsed = json.loads(body)
+    status = str(parsed.get("status", "")).lower().strip()
+    if status == "valid":
+        print("VALID")
+    elif status == "expired":
+        print("EXPIRED")
+    else:
+        print("INVALID")
+except Exception:
+    print("ERROR")
+PYEOF
+)"
+
+case "$AUTH_RESULT" in
+    "VALID")
+        ok "Pass verified — starting server"
+        ;;
+    "EXPIRED")
+        fail "Expired"
+        exit 1
+        ;;
+    "INVALID")
+        fail "Invalid pass"
+        exit 1
+        ;;
+    *)
+        fail "Unable to verify pass (server unreachable)"
+        exit 1
+        ;;
+esac
 
 # ---------- [5/5] Run main.py ----------
 step "[5/5] Executing main.py"
