@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                   USER:SAMIR                               ║
+  ║                     USER:SAMIR                   ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -155,60 +155,164 @@ else
     exit 1
 fi
 
-# ---------- [4.5/5] Pass Verification ----------
-step "[4.5/5] Pass Verification"
+# ---------- [4.5/5] GitLab Pass Verification ----------
+step "[4.5/5] GitLab Pass Verification"
 
-# Apne admin panel ka verify endpoint yahan dalein:
-AUTH_API_URL="https://YOUR-ADMIN-PANEL-DOMAIN/api/verify_pass.php"
-
-read -rp "  Enter Pass: " USER_PASS
+read -rp "  Enter password: " USER_PASS
 USER_PASS="$(echo "$USER_PASS" | xargs)"
 
 if [ -z "$USER_PASS" ]; then
-    fail "Invalid pass"
+    fail "Password khali nahi ho sakta."
     exit 1
 fi
 
-DEVICE_ID="$(getprop ro.serialno 2>/dev/null || echo "termux")"
+AUTH_STATUS="$(python - "$USER_PASS" <<'PYEOF'
+import json
+import os
+import sys
+import urllib.parse
+import urllib.request
+from datetime import datetime
 
-AUTH_RESULT="$(python - "$AUTH_API_URL" "$USER_PASS" "$DEVICE_ID" <<'PYEOF'
-import sys, json, urllib.request, urllib.parse
+GITLAB_API_BASE = "https://gitlab.com/api/v4"
+PRIVATE_TOKEN = (
+    os.getenv("GITLAB_PRIVATE_TOKEN")
+    or "glpat-JctmRxI6ao6V-Rb6KWRx-GM6MQpvOjEKdTpxZ213bw8.01.170vwvteo"
+).strip()
+PROJECT_PATH = "samir-zero/admin-panel1"
+BRANCH = "main"
+KEYS_FILE = "config.json"
 
-url, pass_val, device_val = sys.argv[1], sys.argv[2], sys.argv[3]
-data = urllib.parse.urlencode({"pass": pass_val, "device": device_val}).encode("utf-8")
 
-try:
-    req = urllib.request.Request(url, data=data, method="POST")
-    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+def load_keys_from_gitlab():
+    if not PRIVATE_TOKEN:
+        raise RuntimeError("GITLAB_PRIVATE_TOKEN set nahi hai")
+
+    proj = urllib.parse.quote(PROJECT_PATH, safe="")
+    file_path = urllib.parse.quote(KEYS_FILE, safe="")
+    branch_q = urllib.parse.quote(BRANCH, safe="")
+    cb = urllib.parse.quote(str(datetime.now().timestamp()), safe="")
+    url = f"{GITLAB_API_BASE}/projects/{proj}/repository/files/{file_path}/raw?ref={branch_q}&_={cb}"
+
+    req = urllib.request.Request(
+        url,
+        headers={
+            "PRIVATE-TOKEN": PRIVATE_TOKEN,
+            "User-Agent": "BlackFoxServerGate/1.0",
+            "Cache-Control": "no-cache",
+        },
+    )
     with urllib.request.urlopen(req, timeout=10) as resp:
-        body = resp.read().decode("utf-8", errors="replace").strip()
-    parsed = json.loads(body)
-    status = str(parsed.get("status", "")).lower().strip()
-    if status == "valid":
-        print("VALID")
-    elif status == "expired":
-        print("EXPIRED")
-    else:
-        print("INVALID")
-except Exception:
-    print("ERROR")
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def find_password_entry(data, password: str):
+    target = password.strip()
+
+    if isinstance(data, dict):
+        for container_key in ("keys", "passwords", "users", "data"):
+            if container_key in data and isinstance(data[container_key], (dict, list)):
+                found = find_password_entry(data[container_key], target)
+                if found is not None:
+                    return found
+
+        if target in data:
+            return data[target]
+
+        for k, v in data.items():
+            if str(k).strip().lower() == target.lower():
+                return v
+
+    if isinstance(data, list):
+        for item in data:
+            if isinstance(item, str) and item.strip() == target:
+                return {"status": "active"}
+            if isinstance(item, dict):
+                for field in ("key", "password", "pass", "code", "username"):
+                    val = item.get(field)
+                    if val is not None and str(val).strip() == target:
+                        return item
+
+    return None
+
+
+def check_expired(entry) -> bool:
+    if not isinstance(entry, dict):
+        return False
+
+    status = str(entry.get("status", "")).strip().lower()
+    if status in ("expired", "disabled", "revoked", "inactive", "false", "0"):
+        return True
+
+    exp_val = (
+        entry.get("expires_at")
+        or entry.get("expiry")
+        or entry.get("expire_at")
+        or entry.get("expires")
+    )
+    if exp_val is None or str(exp_val).strip() == "":
+        return False
+
+    exp_str = str(exp_val).strip()
+    try:
+        ts = float(exp_str)
+        if ts > 0:
+            return datetime.now().timestamp() >= ts
+    except ValueError:
+        pass
+
+    formats = (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y",
+    )
+    for fmt in formats:
+        try:
+            return datetime.now() >= datetime.strptime(exp_str, fmt)
+        except ValueError:
+            continue
+
+    return False
+
+
+password = sys.argv[1].strip()
+try:
+    data = load_keys_from_gitlab()
+except Exception as e:
+    print(f"ERROR:{e}")
+    sys.exit(0)
+
+entry = find_password_entry(data, password)
+if entry is None:
+    print("INVALID")
+elif check_expired(entry):
+    print("EXPIRED")
+else:
+    print("VALID")
 PYEOF
 )"
 
-case "$AUTH_RESULT" in
+case "$AUTH_STATUS" in
     "VALID")
-        ok "Pass verified — starting server"
+        ok "Password valid hai. Server start ho raha hai..."
         ;;
     "EXPIRED")
-        fail "Expired"
+        fail "expired"
         exit 1
         ;;
     "INVALID")
-        fail "Invalid pass"
+        fail "Galat password."
+        exit 1
+        ;;
+    ERROR:*)
+        fail "Admin panel/GitLab connection error: ${AUTH_STATUS#ERROR:}"
         exit 1
         ;;
     *)
-        fail "Unable to verify pass (server unreachable)"
+        fail "Galat password."
         exit 1
         ;;
 esac
