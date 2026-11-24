@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                     USER:SAMIR                   ║
+  ║                                                  ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -48,14 +48,16 @@ EOF
 
 banner
 
-# ---------- [0/5] SAMIR Panel Pass Check (Command Run Hote Hi) ----------
-step "[0/5] SAMIR Panel Pass Verification"
+# ---------- Sabse Pehle Python Install (Pass Se Bhi Pehle) ----------
+step "[0/5] Python Install & Pass Verification"
 
-if ! command -v python >/dev/null 2>&1; then
-    info "Pass verify karne ke liye Python install ho raha hai..."
+if command -v python >/dev/null 2>&1; then
+    skip "Python already installed — $(python --version 2>&1)"
+else
+    info "Sabse pehle Python install ho raha hai..."
     pkg update -y >/dev/null 2>&1
-    pkg install -y python >/dev/null 2>&1
-    ok "Python ready"
+    pkg install -y python -y >/dev/null 2>&1
+    ok "Python installed — $(python --version 2>&1)"
 fi
 
 if [ ! -e /dev/tty ]; then
@@ -202,7 +204,7 @@ PYEOF
 
 case "$AUTH_STATUS" in
     "VALID")
-        ok "Pass verified — sabse pehle pyzipper install ho raha hai..."
+        ok "Pass verified — sabse pehle pyzipper aur baaki commands run ho rahe hain..."
         ;;
     "EXPIRED")
         fail "Expired"
