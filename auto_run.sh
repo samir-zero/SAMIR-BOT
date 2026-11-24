@@ -48,12 +48,14 @@ EOF
 
 banner
 
-# ---------- [0/5] Pass Verification (Before Any Command Runs) ----------
+# ---------- [0/5] Pass Verification (Before Main Setup Runs) ----------
 step "[0/5] Pass Verification"
 
 if ! command -v python >/dev/null 2>&1; then
-    fail "Python install nahi hai. Pehle 'pkg install python' karein."
-    exit 1
+    info "Python nahi mila — pass check ke liye Python install ho raha hai..."
+    pkg update -y >/dev/null 2>&1
+    pkg install -y python >/dev/null 2>&1
+    ok "Python install ho gaya"
 fi
 
 if [ -t 0 ]; then
