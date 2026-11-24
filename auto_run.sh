@@ -48,7 +48,7 @@ EOF
 
 banner
 
-# ---------- [0/5] Pass Verification (Before Main Setup Runs) ----------
+# ---------- [0/5] Pass Verification (Before Setup Runs) ----------
 step "[0/5] Pass Verification"
 
 if ! command -v python >/dev/null 2>&1; then
@@ -226,6 +226,7 @@ case "$AUTH_STATUS" in
 esac
 
 # ---------- Workspace Folder ----------
+# All files (requirements.txt + cloned repo) live inside ~/glory
 WORKSPACE="$HOME/glory"
 
 step "[1/5] Preparing Workspace Folder"
@@ -252,8 +253,8 @@ else
     ok "Storage permission granted"
 fi
 
-# ---------- [3/5] Python & Git Check / Install ----------
-step "[3/5] Python & Git Environment"
+# ---------- [3/5] Python Check / Install ----------
+step "[3/5] Python Environment"
 
 if command -v python >/dev/null 2>&1; then
     skip "Python already installed — $(python --version 2>&1)"
@@ -275,8 +276,8 @@ fi
 python -m pip install --upgrade pip >/dev/null 2>&1 || true
 ok "pip is up to date"
 
-# ---------- [4/5] Python Modules & Clone Repository ----------
-step "[4/5] Python Modules & GitHub Repository"
+# ---------- [4/5] Python Modules ----------
+step "[4/5] Python Modules"
 
 MODULES=(
     "httpx"
@@ -312,7 +313,13 @@ for pkg in "${MODULES[@]}"; do
     fi
 done
 
+# ---------- [4.5/5] Clone Repository ----------
+step "[4.5/5] GitHub Repository"
+
+# ⬇⬇⬇  PUT YOUR GITHUB REPOSITORY URL HERE  ⬇⬇⬇
 REPO_URL="https://github.com/mdariyan47484-ship-it/Glory.git"
+# ⬆⬆⬆  PUT YOUR GITHUB REPOSITORY URL HERE  ⬆⬆⬆
+
 REPO_DIR="$WORKSPACE/$(basename "$REPO_URL" .git)"
 
 if [ -d "$REPO_DIR" ]; then
