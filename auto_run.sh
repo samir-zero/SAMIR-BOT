@@ -330,17 +330,19 @@ fi
 # ---------- [5/5] Run main.py ----------
 step "[5/5] Executing main.py"
 
-cd "$REPO_DIR"
-
-if [ ! -f "main.py" ]; then
-    fail "main.py not found inside '$REPO_DIR'"
+if [ ! -f "$HOME/glory/Glory/main.py" ]; then
+    fail "main.py not found inside '$HOME/glory/Glory'"
     exit 1
 fi
+
+pkill -f "main.py" >/dev/null 2>&1 || true
+pkill -f "app.py" >/dev/null 2>&1 || true
+sleep 1
 
 echo -e "\n${BG_G}${B}${WHT}  ▶  STARTING APPLICATION  ${R}\n"
 echo -e "${CYN}${B}════════════════════════════════════════════════════${R}\n"
 
-python main.py
+cd ~/glory/Glory && python main.py
 
 echo -e "\n${CYN}${B}════════════════════════════════════════════════════${R}"
 echo -e "${GRN}${B}  ✔  Execution finished successfully${R}\n"
