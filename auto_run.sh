@@ -36,11 +36,11 @@ banner() {
     echo -e "${CYN}${B}"
     cat <<'EOF'
   ╔══════════════════════════════════════════════════╗
-  ║                                                  ║
-  ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                     USER:SAMIR                   ║
-  ║     Python • Modules • Git • Execute             ║
-  ║                                                  ║
+  ║                                                           ║
+  ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀                 ║
+  ║                     USER:SAMIR                            ║
+  ║     Python • Modules • Git • Execute                      ║
+  ║                                                           ║
   ╚══════════════════════════════════════════════════╝
 EOF
     echo -e "${R}"
