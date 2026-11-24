@@ -38,7 +38,7 @@ banner() {
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
   ║        🚀  TERMUX AUTO SETUP & RUNNER  🚀        ║
-  ║                   USER:SAMIR                     ║
+  ║                    USER:SAMIR                    ║
   ║     Python • Modules • Git • Execute             ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
@@ -368,44 +368,36 @@ def replace_names(text: str) -> str:
     return text
 
 
-def process_file(fpath: str) -> None:
-    try:
-        with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
-            orig = f.read()
-    except Exception:
-        return
+def replace_banner_block(text: str) -> str:
+    if "██" not in text or ("╔" not in text and "╚" not in text):
+        return text
 
-    updated = replace_names(orig)
+    lines = text.splitlines()
+    new_lines = []
+    block_buf = []
+    replaced = False
 
-    if "██" in updated and ("╔" in updated or "╚" in updated):
-        lines = updated.splitlines()
-        new_lines = []
-        block_buf = []
-        replaced_banner = False
+    for line in lines:
+        if "██" in line and ("╔" in line or "╚" in line or "║" in line or "═" in line):
+            block_buf.append(line)
+        else:
+            if block_buf:
+                if len(block_buf) >= 4 and not replaced:
+                    new_lines.extend(SAMIR_BLOCK_BANNER.splitlines())
+                    replaced = True
+                else:
+                    new_lines.extend(block_buf)
+                block_buf.clear()
+            new_lines.append(line)
 
-        def flush_block() -> None:
-            nonlocal replaced_banner
-            if not block_buf:
-                return
-            if len(block_buf) >= 4 and not replaced_banner:
-                new_lines.extend(SAMIR_BLOCK_BANNER.splitlines())
-                replaced_banner = True
-            else:
-                new_lines.extend(block_buf)
-            block_buf.clear()
+    if block_buf:
+        if len(block_buf) >= 4 and not replaced:
+            new_lines.extend(SAMIR_BLOCK_BANNER.splitlines())
+        else:
+            new_lines.extend(block_buf)
 
-        for line in lines:
-            if "██" in line and ("╔" in line or "╚" in line or "║" in line or "═" in line):
-                block_buf.append(line)
-            else:
-                flush_block()
-                new_lines.append(line)
-        flush_block()
-        updated = "\n".join(new_lines) + ("\n" if orig.endswith("\n") else "")
-
-    if updated != orig:
-        with open(fpath, "w", encoding="utf-8") as f:
-            f.write(updated)
+    trailing_nl = "\n" if text.endswith("\n") else ""
+    return "\n".join(new_lines) + trailing_nl
 
 
 exts = (
@@ -415,8 +407,19 @@ exts = (
 
 for dirpath, _, filenames in os.walk(root_dir):
     for fname in filenames:
-        if fname.lower().endswith(exts):
-            process_file(os.path.join(dirpath, fname))
+        if not fname.lower().endswith(exts):
+            continue
+        fpath = os.path.join(dirpath, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                orig = f.read()
+        except Exception:
+            continue
+
+        updated = replace_banner_block(replace_names(orig))
+        if updated != orig:
+            with open(fpath, "w", encoding="utf-8") as f:
+                f.write(updated)
 PYEOF
 
 ok "All ARIYAN references replaced with SAMIR"
